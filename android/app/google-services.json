@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "722993153540",
+    "project_id": "heart-iq-59cbe",
+    "storage_bucket": "heart-iq-59cbe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:722993153540:android:1e4c8f01e56eae78c09751",
+        "android_client_info": {
+          "package_name": "com.example.heart_iq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCaeSgxhgEDA5tr4-Gtc_Hh70Vo-tLlnvY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
