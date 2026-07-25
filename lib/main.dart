@@ -705,7 +705,7 @@ class _SymptomCheckScreenState extends State<SymptomCheckScreen> {
     final apiKey = dotenv.get('GEMINI_API_KEY'); // Replace with your actual API key
 
     final model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       apiKey: apiKey,
       // Instructions for the AI model to provide advice based on symptoms
       systemInstruction: Content.system('''
