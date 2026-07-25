@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 //import 'package:firebase_core/firebase_core.dart';
 //import 'package:firebase_ai/firebase_ai.dart';
 //import 'package:firebase_app_check/firebase_app_check.dart';
