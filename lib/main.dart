@@ -1,23 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-//import 'package:firebase_core/firebase_core.dart';
-//import 'package:firebase_ai/firebase_ai.dart';
-//import 'package:firebase_app_check/firebase_app_check.dart';
-//import 'firebase_options.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 const Color _backgroundColor = Color(0xFF0F172A);
 const Color _accentColor = Color(0xFF2DD4BF);
 const Color _cardColor = Color(0xFF1E293B);
 
-//Future<void> main() async {
-  //WidgetsFlutterBinding.ensureInitialized();
-  //await Firebase.initializeApp(
-  //options: DefaultFirebaseOptions.currentPlatform,
-//);
-  //runApp(const HeartIQApp());
-//}
-
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(const HeartIQApp());
 }
 
@@ -463,7 +454,7 @@ class HomeScreen extends StatelessWidget {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                         onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const SymptomCheckScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => SymptomCheckScreen()));
                         },
                         child: const Column(
                           mainAxisSize: MainAxisSize.min,
@@ -684,152 +675,136 @@ class DietAndLifestyleScreen extends StatelessWidget {
 //==============================================
 class SymptomCheckScreen extends StatefulWidget {
   const SymptomCheckScreen({super.key});
-
+  
   @override
   State<SymptomCheckScreen> createState() => _SymptomCheckScreenState();
 }
 
 class _SymptomCheckScreenState extends State<SymptomCheckScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _symptomController = TextEditingController();
-  String? _symptomErrorText;
-  bool _isTextRevealed = false;
 
-  @override
-  void dispose() {
-    _symptomController.dispose();
-    super.dispose();
+  final _symptomController = TextEditingController();
+
+  String _aiAdvice = "Enter your symptoms above to get advice.";
+  bool _isLoading = false;
+
+  String? _errorText;
+
+  Future<void> _getAIAdvice() async {
+    if (_symptomController.text.trim().isEmpty) {
+      setState(() {
+        _errorText = "Please enter your symptoms before checking.";
+      });
+      return;
+    }
+
+    setState(() {
+      _errorText = null;
+      _isLoading = true;
+    });
+
+    final apiKey = dotenv.get('GEMINI_API_KEY'); // Replace with your actual API key
+
+    final model = GenerativeModel(
+      model: 'gemini-1.5-flash',
+      apiKey: apiKey,
+      // Instructions for the AI model to provide advice based on symptoms
+      systemInstruction: Content.system('''
+        You are a helpful triage assistant.
+        If the user inpts mild, common symptoms (like a light headache, mild couch, or fatigue), suggest gentle home remedies like drinking more water, resting, or eating specific healthy foods (e.g., nuts, broths).
+        DO NOT DIAGNOSE DISEASES
+        If the symptoms are severs or concerning (e.g., chest pain, shortness of breath, severe bleeding, high fever), immediately advise them to seek professional medical help or go to an emergency room.
+      '''),
+    );
+    
+    try {
+      final prompt = _symptomController.text;
+      final content = [Content.text(prompt)];
+
+      final response = await model.generateContent(content);
+
+      setState(() {
+        _aiAdvice = response.text ?? "I couldn't process that. Please try again.";
+      });
+    } catch (e) {
+      setState(() {
+        _aiAdvice = "Error communicating with AI: $e";
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Symptom Check'), automaticallyImplyLeading: true),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 24),
-                const Text(
-                  'List your symptoms below and we will provide a preliminary analysis.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const SizedBox(height: 24),
+            const Text(
+              'List your symptoms below and we will provide a preliminary analysis.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+             'This is not a substitute for professional medical advice.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.white70),
+              ),
+            const SizedBox(height: 32),
+            TextField(
+              controller: _symptomController,
+              decoration: InputDecoration(
+                labelText: 'How are you feeling today?',
+                border: const OutlineInputBorder(),
+                hintText: 'e.g., I have a slight headache and feel tired.',
+                errorText: _errorText,
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                 'This is not a substitute for professional medical advice.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.white70),
-                  ),
-                const SizedBox(height: 32),
-                TextFormField(
-                  controller: _symptomController,
-                  maxLines: 5,
-                  decoration: InputDecoration(
-                    hintText: 'Describe your symptoms here...',
-                    errorText: _symptomErrorText,
-                    filled: true,
-                    fillColor: _cardColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                ).copyWith(errorText: _symptomErrorText),
-                
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your symptoms.';
-                  }
-                  return null;
-                },
+                maxLines: 3,
               ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _accentColor,
-                    foregroundColor: _backgroundColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                 onPressed: _isTextRevealed
-                      ? null
-                      : () {
-                          if (_formKey.currentState!.validate()) {
-                            setState(() {
-                              _isTextRevealed = true;
-                            });
-                          }
-                        },
-                 child: const Text('Generate Report', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-               ),
+            const SizedBox(height: 16),
+
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accentColor,
+                  foregroundColor: _backgroundColor,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: _isLoading ? null: _getAIAdvice,
+                child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Check Symptoms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
-              const SizedBox(height: 24),
-              if (_isTextRevealed)
-                Card(
-                  color: _cardColor,
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: const Text('Generated Report Content Goes Here', style: TextStyle(fontSize: 18, color: Colors.white70)),
+            ),
+            const SizedBox(height: 24),
+
+            Expanded(
+              child: SingleChildScrollView(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: _accentColor),
+                    color: _backgroundColor,
+                    borderRadius: BorderRadius.circular(12)
+                  ),
+                  child: Text(
+                    _aiAdvice,
+                    style: const TextStyle(fontSize: 16),
                   ),
                 ),
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
       ),
-    ),
-    );
-  }
-}
-
-//==============================================
-// TEXT TOGGLE WIDGET
-//==============================================
-class TextToggleWidget extends StatefulWidget {
-  const TextToggleWidget({super.key});
-
-  @override
-  State<TextToggleWidget> createState() => _TextToggleWidgetState();
-}
-
-class _TextToggleWidgetState extends State<TextToggleWidget> {
-  // 2. This variable tracks whether the text is hidden or visible
-  bool _isVisible = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // 3. The button that triggers the visibility change
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _accentColor,
-              foregroundColor: _backgroundColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: _isVisible ? null : () {
-            // 4. setState tells Flutter to rebuild the UI with the new value
-              setState(() {
-               _isVisible = true; // Toggles the text on
-              });
-            },
-            child: const Text('Generate Report', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-         ),
-        ),
-        const SizedBox(height: 20),
-        // 5. Conditional operator: Displays the Text if true, otherwise an empty box
-        if (_isVisible)
-            const Text('Hello! You clicked the button.', style: TextStyle(fontSize: 20))
-      ],
     );
   }
 }
