@@ -46,5 +46,5 @@ Ensure you have the following installed locally:
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/your-username/heart-iq.git](https://github.com/your-username/heart-iq.git)
+   git clone [https://github.com/Haptic7/goIT-App](https://github.com/Haptic7/goIT-App)
    cd heart-iq
