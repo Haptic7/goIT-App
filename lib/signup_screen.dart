@@ -18,6 +18,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
 
+  final _medicalConditionsController = TextEditingController();
+
   final AuthService _authService = AuthService();
   bool _isLoading = false;
   String? _errorMessage;
@@ -30,6 +32,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _passwordController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
+    _medicalConditionsController.dispose();
     super.dispose();
   }
 
@@ -60,6 +63,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       password: _passwordController.text,
       phone: _phoneController.text,
       address: _addressController.text,
+      medicalConditions: _medicalConditionsController.text.isEmpty
+        ? 'None'
+        : _medicalConditionsController.text,
     );
 
     setState(() {
@@ -132,7 +138,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 16),
 
-            // Last Name TextField
+                  // Last Name TextField
                   TextField(
                     controller: _lastNameController,
                       style: const TextStyle(color: Colors.white),
@@ -219,6 +225,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
                       maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Medical Conditions TextField
+                  TextField(
+                    controller: _medicalConditionsController,
+                    style: const TextStyle(color: Colors.white),
+                    maxLines: 3, // Multi-line input for longer lists/descriptions
+                    decoration: InputDecoration(
+                      labelText: 'Previous Medical Conditions',
+                      hintText: 'e.g., High blood pressure, Asthma, None',
+                      hintStyle: TextStyle(color: Colors.grey.shade600),
+                      labelStyle: const TextStyle(color: Colors.grey),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: AppColors.accent),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey.shade700),
+                      ),
+                    ),
                   ),
                 ],
               ),
